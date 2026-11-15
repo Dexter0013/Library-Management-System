@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $memberData = [
+            ['name' => 'Sample Member', 'email' => 'nfeest@example.net'],
             ['name' => 'Emma Watson', 'email' => 'emma@library.test'],
             ['name' => 'John Doe', 'email' => 'john@library.test'],
             ['name' => 'Sarah Connor', 'email' => 'sarah@library.test'],
