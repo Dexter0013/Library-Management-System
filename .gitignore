@@ -1,0 +1,54 @@
+# Dependencies
+/node_modules
+/vendor
+composer.phar
+
+# Frontend build & hot reload
+/public/build
+/public/hot
+/public/storage
+
+# Environment & credentials
+.env
+.env.backup
+.env.*
+!.env.example
+auth.json
+
+# Storage & caches
+/storage/*.key
+/storage/pail
+.phpunit.result.cache
+/.phpunit.cache
+
+# Database files (SQLite)
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE & Editor configs
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.phpactor.json
+
+# Operating system files
+.DS_Store
+._*
+__MACOSX
+Thumbs.db
+Desktop.ini
+
+# Vagrant / Homestead
+Homestead.json
+Homestead.yaml
