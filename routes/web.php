@@ -13,6 +13,20 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 })->middleware('auth');
 
+Route::get('/init-db', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrate = \Illuminate\Support\Facades\Artisan::output();
+
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $seed = \Illuminate\Support\Facades\Artisan::output();
+
+        return response("<h2>Database Initialized Successfully!</h2><pre>{$migrate}\n{$seed}</pre><br><a href='/login'>Proceed to Login</a>");
+    } catch (\Throwable $e) {
+        return response("<h2>Database Initialization Failed:</h2><pre>{$e->getMessage()}</pre>", 500);
+    }
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [RegisteredUserController::class, 'store']);
