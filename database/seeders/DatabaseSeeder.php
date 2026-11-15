@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,15 +19,35 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::factory()->create([
-            'name' => 'Library Admin',
-            'email' => 'admin@library.test',
-            'role' => 'admin',
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@library.test'],
+            [
+                'name' => 'Library Admin',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'email_verified_at' => now(),
+            ]
+        );
 
-        $members = User::factory(5)->create([
-            'role' => 'member',
-        ]);
+        $memberData = [
+            ['name' => 'Emma Watson', 'email' => 'emma@library.test'],
+            ['name' => 'John Doe', 'email' => 'john@library.test'],
+            ['name' => 'Sarah Connor', 'email' => 'sarah@library.test'],
+            ['name' => 'Bruce Wayne', 'email' => 'bruce@library.test'],
+            ['name' => 'Peter Parker', 'email' => 'peter@library.test'],
+        ];
+
+        $members = collect($memberData)->map(function ($data) {
+            return User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $data['name'],
+                    'password' => Hash::make('password'),
+                    'role' => 'member',
+                    'email_verified_at' => now(),
+                ]
+            );
+        });
 
         $categoriesData = [
             ['name' => 'Fiction', 'description' => 'Novels and short stories.'],
@@ -36,7 +57,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Biography', 'description' => 'Life stories of notable people.'],
         ];
 
-        $categories = collect($categoriesData)->map(fn ($data) => Category::create($data));
+        $categories = collect($categoriesData)->map(function ($data) {
+            return Category::firstOrCreate(['name' => $data['name']], $data);
+        });
 
         $booksData = [
             ['title' => 'The Silent Orchard', 'author' => 'Elena Marsh', 'isbn' => '9780000000001', 'category' => 'Fiction', 'copies' => 4, 'year' => 2018],
@@ -52,51 +75,60 @@ class DatabaseSeeder extends Seeder
         ];
 
         $books = collect($booksData)->map(function ($data) use ($categories) {
-            return Book::create([
-                'title' => $data['title'],
-                'author' => $data['author'],
-                'isbn' => $data['isbn'],
-                'category_id' => $categories->firstWhere('name', $data['category'])->id,
-                'published_year' => $data['year'],
-                'total_copies' => $data['copies'],
-                'available_copies' => $data['copies'],
-                'description' => "A notable title in the {$data['category']} collection.",
-            ]);
+            $catId = $categories->firstWhere('name', $data['category'])->id;
+            return Book::firstOrCreate(
+                ['isbn' => $data['isbn']],
+                [
+                    'title' => $data['title'],
+                    'author' => $data['author'],
+                    'category_id' => $catId,
+                    'published_year' => $data['year'],
+                    'total_copies' => $data['copies'],
+                    'available_copies' => $data['copies'],
+                    'description' => "A notable title in the {$data['category']} collection.",
+                ]
+            );
         });
 
         $firstMember = $members->first();
         $sampleBook = $books->first();
 
-        BorrowRecord::create([
-            'user_id' => $firstMember->id,
-            'book_id' => $sampleBook->id,
-            'borrowed_at' => now()->subDays(20),
-            'due_date' => now()->subDays(6),
-            'status' => 'borrowed',
-        ]);
-        $sampleBook->decrement('available_copies');
+        if (!BorrowRecord::where('user_id', $firstMember->id)->where('book_id', $sampleBook->id)->exists()) {
+            BorrowRecord::create([
+                'user_id' => $firstMember->id,
+                'book_id' => $sampleBook->id,
+                'borrowed_at' => now()->subDays(20),
+                'due_date' => now()->subDays(6),
+                'status' => 'borrowed',
+            ]);
+            $sampleBook->decrement('available_copies');
+        }
 
         $secondBook = $books->get(1);
         $secondMember = $members->get(1);
 
-        BorrowRecord::create([
-            'user_id' => $secondMember->id,
-            'book_id' => $secondBook->id,
-            'borrowed_at' => now()->subDays(5),
-            'due_date' => now()->addDays(9),
-            'status' => 'borrowed',
-        ]);
-        $secondBook->decrement('available_copies');
+        if (!BorrowRecord::where('user_id', $secondMember->id)->where('book_id', $secondBook->id)->exists()) {
+            BorrowRecord::create([
+                'user_id' => $secondMember->id,
+                'book_id' => $secondBook->id,
+                'borrowed_at' => now()->subDays(5),
+                'due_date' => now()->addDays(9),
+                'status' => 'borrowed',
+            ]);
+            $secondBook->decrement('available_copies');
+        }
 
         $thirdBook = $books->get(2);
 
-        BorrowRecord::create([
-            'user_id' => $firstMember->id,
-            'book_id' => $thirdBook->id,
-            'borrowed_at' => now()->subDays(30),
-            'due_date' => now()->subDays(16),
-            'returned_at' => now()->subDays(18),
-            'status' => 'returned',
-        ]);
+        if (!BorrowRecord::where('user_id', $firstMember->id)->where('book_id', $thirdBook->id)->exists()) {
+            BorrowRecord::create([
+                'user_id' => $firstMember->id,
+                'book_id' => $thirdBook->id,
+                'borrowed_at' => now()->subDays(30),
+                'due_date' => now()->subDays(16),
+                'returned_at' => now()->subDays(18),
+                'status' => 'returned',
+            ]);
+        }
     }
 }
