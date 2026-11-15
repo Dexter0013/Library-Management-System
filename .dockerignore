@@ -1,0 +1,10 @@
+node_modules
+vendor
+.git
+.github
+.env
+.phpunit.result.cache
+tests
+storage/logs/*
+docker-compose.yml
+README.md
