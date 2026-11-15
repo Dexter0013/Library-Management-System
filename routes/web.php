@@ -15,7 +15,7 @@ Route::get('/', function () {
 
 Route::get('/init-db', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
         $migrate = \Illuminate\Support\Facades\Artisan::output();
 
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
@@ -23,7 +23,8 @@ Route::get('/init-db', function () {
 
         return response("<h2>Database Initialized Successfully!</h2><pre>{$migrate}\n{$seed}</pre><br><a href='/login'>Proceed to Login</a>");
     } catch (\Throwable $e) {
-        return response("<h2>Database Initialization Failed:</h2><pre>{$e->getMessage()}</pre>", 500);
+        $prev = $e->getPrevious() ? "\nPrevious: " . $e->getPrevious()->getMessage() : "";
+        return response("<h2>Database Initialization Failed:</h2><pre>{$e->getMessage()}{$prev}\n\nTrace:\n{$e->getTraceAsString()}</pre>", 500);
     }
 });
 
